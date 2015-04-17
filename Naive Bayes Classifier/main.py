@@ -9,8 +9,6 @@
 	Input: Modified version of the 1994 U.S.A Census Data
 	Task: Predict whether the income of the person exceeds $50K/yr based on census data. 
 
-
-
  	git clone git://github.com/numpy/numpy.git numpy
 '''
 import numpy
