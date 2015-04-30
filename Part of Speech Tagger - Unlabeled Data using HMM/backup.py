@@ -107,7 +107,6 @@ def main():
 	initialCounts 		= [0]*num_of_tags
 	tagCounts 			= [0]*num_of_tags
 	
-
 	# Iterate over each sentence - sentences[s] gives you the sentence
 	for s in range(1):
 		# get number of words in sentence 
@@ -119,48 +118,33 @@ def main():
 
 		# ---- Forward Algorithm 
 		# Initialization (first column of trellis)
-		c_0 = 0
 		for i in range(num_of_tags):
 			Forward[i][0] = pi[i]*emission[i][words_lookup[words_in_s[i]]]]
-			c_0 = c_0 + Forward[i][0]
-
-		# Scale Forward[i][0]
-		for i in range(num_of_tags):
-			Forward[i][0] = c_0*Forward[i][0]
 
 		# Intermediate Step 
-		c_t = 0
-		for t in range(1, num_words_in_s):
-			c_t = 0
-			for i in range(num_of_tags):
-				Forward[i][t] = 0
-				for j in range(num_of_tags):
-					Forward[i][t] = Forward[i][t] + Forward[j][t-1]*transition[j][i]
-				Forward[i][t] = Forward[i][t]*emission[i][words_lookup[words_in_s[t]]]
-				c_t = c_t + Forward[i][t]
-			# Scale Forward[i][t]
-			c_t = 1.0/c_t
-			for i in range(num_of_tags):
-				Forward[i][t] = c_t*Forward[i][t]
+		for i in range(1, num_words_in_s):
+			for j in range(num_of_tags):
+				sum_incoming_transitions = 0
+				for k in range(num_of_tags):
+					sum_incoming_transitions = sum_incoming_transitions + Forward[k][i-1]*transition[k][j]*emission[j][words_lookup[words_in_s[j]]]
+				Forward[j][i] = sum_incoming_transitions
+
+		# Final Steps - Not needed?
 	
 		# ---- Backward Algorithm 
 		# Initialization (first column of trellis)
 		for j in range(num_of_tags):
-			Backward[j][num_words_in_s - 1] = c_t
+			Backward[j][num_words_in_s - 1] = 1
 
 
-		for t in range(num_words_in_s - 2, -1, -1):
-			for i in range(num_of_tags):
-				Backward[i][t] = 0
-				#sum_over_k = 0
-				for j in range(num_of_tags):
-					Backward[i][t] = Backward[i][t] + transition[i][j]*emission[j][words_lookup[words_in_s[i+1]]]*Backward[j][t+1]
-				# Scale Backward[i][t] with c_t
-				Backward[i][t] = Backward[i][t]*c_t
-		# ----------- SHOULD BE RIGHT UP UNTIL HERE
+		for i in range(num_words_in_s - 2, -1, -1):
+			for j in range(num_of_tags):
+				sum_over_k = 0
+				for k in range(num_of_tags):
+					sum_over_k = sum_over_k + transition[j][k]*emission[k][words_lookup[words_in_s[j]]]*Backward[k][i+1]
+				Backward[j][i] = sum_over_k
+	
 
-
-		
 		# ----- Gamma pass
 		# For number of words in sentence 
 		gamma_double = [[0 for s in range(num_of_tags)] for s in range(num_of_tags)]
