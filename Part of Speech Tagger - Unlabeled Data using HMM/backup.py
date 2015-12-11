@@ -118,57 +118,42 @@ def main():
 
 		# ---- Forward Algorithm 
 		# Initialization (first column of trellis)
-		for i in range(num_of_tags):
-			Forward[i][0] = pi[i]*emission[i][words_lookup[words_in_s[i]]]]
+		for j in range(3):
+			Forward[j][0] = pi[j]*emission[j][word[0]]
 
-		# Intermediate Step 
-		for i in range(1, num_words_in_s):
-			for j in range(num_of_tags):
+		# Intermediate Steps - All subsequent columns
+		# sum all incoming transition probabilies
+		for i in range(1, 3):
+			for j in range(3):
 				sum_incoming_transitions = 0
-				for k in range(num_of_tags):
-					sum_incoming_transitions = sum_incoming_transitions + Forward[k][i-1]*transition[k][j]*emission[j][words_lookup[words_in_s[j]]]
+				for k in range(3):
+					print trans[k][j], trans[j][k]
+					sum_incoming_transitions = sum_incoming_transitions + Forward[k][i-1]*trans[k][j]*emission[j][word[i]]
+
 				Forward[j][i] = sum_incoming_transitions
 
-		# Final Steps - Not needed?
-	
-		# ---- Backward Algorithm 
+		# Final Steps (last column of trellis)
+		#sum_last_column = 0
+		#for k in range(3):
+		#	sum_last_column = sum_last_column + Forward[k][2]
+		#print "Chosen Val ", sum_last_column
+
+
 		# Initialization (first column of trellis)
-		for j in range(num_of_tags):
-			Backward[j][num_words_in_s - 1] = 1
+		for j in range(3):
+			Backward[j][2] = 1
 
-
-		for i in range(num_words_in_s - 2, -1, -1):
-			for j in range(num_of_tags):
+		# Intermediate Steps - All subsequent columns
+		# sum all incoming transition probabilies
+		for i in range(1, -1, -1):
+			print i
+			for j in range(3):
 				sum_over_k = 0
-				for k in range(num_of_tags):
-					sum_over_k = sum_over_k + transition[j][k]*emission[k][words_lookup[words_in_s[j]]]*Backward[k][i+1]
+				for k in range(3):
+					sum_over_k = sum_over_k + trans[j][k]*emission[k][word[i+1]]*Backward[k][i+1]
 				Backward[j][i] = sum_over_k
-	
-
-		# ----- Gamma pass
-		# For number of words in sentence 
-		gamma_double = [[0 for s in range(num_of_tags)] for s in range(num_of_tags)]
-		gamma_single = [0]*num_of_tags
-		for t in range(0, num_words_in_s - 2):
-			denom = 0
-			for i in range(num_of_tags):
-				for j in range(num_of_tags):
-					denom = denom + Forward[t][i]*Backward[t][i+1]*transition[i][j]*emission[j][words_lookup[words_in_s[i]]]
-			for i in range(num_of_tags):
-				gamma[t][i] = 0
-				for j in range(num_of_tags):
-					gamma[i][j] = 
-		# ---- Expectation Calculatiion
-		# for each word/tag pair (w, t)
 
 
-
-
-
-		# for each tag t: 
-		for t in range(num_of_tags):
-			for w in range(num_of_words):
-				tagCounts[t] = tagCounts[t] + emissionCounts[t][w]
 
 
 		'''
@@ -187,15 +172,20 @@ def main():
 		'''
 
 
-		'''
+		
 		prob_of_word = 0
 		for x in range(num_of_tags):
-			print Forward[x][num_words_in_s-1],Backward[x][num_words_in_s-1]
 			prob_of_word = prob_of_word + Forward[x][num_words_in_s-1]*Backward[x][num_words_in_s-1]
 
 		print prob_of_word
 
-		'''
+		prob_of_word = 0
+		for x in range(num_of_tags):
+			prob_of_word = prob_of_word + Forward[x][num_words_in_s-1]*Backward[x][num_words_in_s-1]
+
+		print prob_of_word
+
+		
 	'''
 	print "transition matrix "
 	print printMatrix(transition)

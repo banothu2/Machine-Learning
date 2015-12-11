@@ -19,7 +19,7 @@ def extract_words_from_file(filename):
 	length_of_data = len(data) 
 
 	# REMOVE THIS LINE 
-	#length_of_data = 300
+	length_of_data = 10
 	# REMOVE THIS LINE 
 
 	for x in range(length_of_data):
@@ -55,7 +55,7 @@ def main():
 	length_of_data = len(data) 
 
 	# REMOVE THIS LINE 
-	#length_of_data = 10
+	length_of_data = 10
 	# REMOVE THIS LINE 
 
 	lookup_ctr = 0
@@ -91,24 +91,23 @@ def main():
 
 	tags = extract_tags_from_file('data/data.lexicon.txt')
 	num_of_tags = len(tags)
-	uniform_for_tags = 1.0/num_of_tags
+	uniform_for_tags = mpf(1.0/num_of_tags)
 
 	pi 			= [uniform_for_tags]*num_of_tags
-	transition 	= [[0 for s in range(num_of_tags)] for s in range(num_of_tags)]
-	emission 	= [[0 for s in range(num_of_words)] for s in range(num_of_tags)]
+	transition 	= [[mpf(1) for s in range(num_of_tags)] for s in range(num_of_tags)]
+	emission 	= [[mpf(1) for s in range(num_of_words)] for s in range(num_of_tags)]
 
 	
 	# Uniform initialization for transition matrix
 	for i in range(num_of_tags):
 		for j in range(num_of_tags):
-			transition[i][j] =  uniform_for_tags
+			transition[i][j] =  mpf(uniform_for_tags)
 	
 	# Uniform initialization for emission matrix 
 	for i in range(num_of_tags):
 		for j in range(num_of_words):
-			emission[i][j] = uniform_for_words
+			emission[i][j] = mpf(uniform_for_words)
 	
-
 	# Implementing 
 
 	# Get each sentence from unlabeled data 
@@ -120,52 +119,56 @@ def main():
 
 
 	# Initialize Counters 
-	emissionCounts 		= [[0 for s in range(num_of_words)] for s in range(num_of_tags)]
-	transitionCounts 	= [[0 for s in range(num_of_tags)] for s in range(num_of_tags)]
-	initialCounts 		= [0]*num_of_tags
-	tagCounts 			= [0]*num_of_tags
-	
+	emissionCounts 		= [[mpf(1) for s in range(num_of_words)] for s in range(num_of_tags)]
+	transitionCounts 	= [[mpf(1) for s in range(num_of_tags)] for s in range(num_of_tags)]
+	initialCounts 		= [mpf(1)]*num_of_tags
+	tagCounts 			= [mpf(1)]*num_of_tags
 	
 	
 	for u in range(1):
 		# Iterate over each sentence - sentences[s] gives you the sentence
-		for s in range(num_of_sentences):
+		for s in range(10):
 			print s
 			# get number of words in sentence 
 			words_in_s = data[s].split(' ')
 			num_words_in_s = len(words_in_s)
 			# Compute forward and backward matrices
-			Forward = [[0 for s in range(num_words_in_s)] for s in range(num_of_tags)]
-			Backward = [[0 for s in range(num_words_in_s)] for s in range(num_of_tags)]
+			Forward = [[mpf(0) for s in range(num_words_in_s)] for s in range(num_of_tags)]
+			Backward = [[mpf(0) for s in range(num_words_in_s)] for s in range(num_of_tags)]
 
+			'''
 			# ---- Forward Algorithm 
 			# Initialization (first column of trellis)
-			c = [0]*num_words_in_s
+			c = [mpf(1)]*num_words_in_s
 
-			c[0] = 0
+			c[0] = mpf(0)
 			for i in range(num_of_tags):
-				Forward[i][0] = pi[i]*emission[i][words_lookup[words_in_s[0]]]
-				c[0] = c[0] + Forward[i][0]
+				Forward[i][0] = mpf(pi[i]*emission[i][words_lookup[words_in_s[0]]])
+				c[0] = mpf(c[0] + Forward[i][0])
+
 
 			# Scale Forward[i][0]
-			for i in range(num_of_tags):
-				Forward[i][0] = c[0]*Forward[i][0]
+			if(c[0] != 0):
+				c[0] = mpf(1/c[0])
+				for i in range(num_of_tags):
+					Forward[i][0] = mpf(c[0]*Forward[i][0])
 
 			# Intermediate Step 
 
 			for t in range(1, num_words_in_s):
-				c[t] = 0
+				c[t] = mpf(0)
 				for i in range(num_of_tags):
-					Forward[i][t] = 0
+					Forward[i][t] = mpf(0)
 					for j in range(num_of_tags):
-						Forward[i][t] = Forward[i][t] + Forward[j][t-1]*transition[j][i]
-					Forward[i][t] = Forward[i][t]*emission[i][words_lookup[words_in_s[t]]]
-					c[t] = c[t] + Forward[i][t]
+						Forward[i][t] = mpf(Forward[i][t] + mpf(Forward[j][t-1])*mpf(transition[j][i]))
+					Forward[i][t] = mpf(Forward[i][t]*emission[i][words_lookup[words_in_s[t]]])
+					c[t] = mpf(c[t] + Forward[i][t])
+				
 				# Scale Forward[i][t]
 				if( c[t] != 0):
-					c[t] = 1.0 / c[t]
+					c[t] = mpf(1.0 / c[t])
 					for i in range(num_of_tags):
-						Forward[i][t] = c[t]*Forward[i][t]
+						Forward[i][t] = mpf(c[t]*Forward[i][t])
 				#if(c[t] == 0):
 				#	c[t] = 0
 				#else:
@@ -175,19 +178,62 @@ def main():
 		
 			# ---- Backward Algorithm 
 			# Initialization (first column of trellis)
-			for j in range(num_of_tags):
-				Backward[j][num_words_in_s - 1] = c[t]
+			for i in range(num_of_tags):
+				Backward[i][num_words_in_s - 1] = mpf(c[num_words_in_s-1])
 
 
 			for t in range(num_words_in_s - 2, -1, -1):
 				for i in range(num_of_tags):
-					Backward[i][t] = 0
+					Backward[i][t] = mpf(0)
 					#sum_over_k = 0
 					for j in range(num_of_tags):
-						Backward[i][t] = Backward[i][t] + transition[i][j]*emission[j][words_lookup[words_in_s[t+1]]]*Backward[j][t+1]
+						Backward[i][t] = mpf(Backward[i][t] + mpf(transition[i][j])*mpf(emission[j][words_lookup[words_in_s[t+1]]])*mpf(Backward[j][t+1]))
 					# Scale Backward[i][t] with c_t
-					Backward[i][t] = Backward[i][t]*c[t]
+					Backward[i][t] = mpf(mpf(Backward[i][t])*mpf(c[t]))
 
+
+			print Forward
+			print Backward
+			'''
+
+			
+			# Initialization (first column of trellis)
+			for j in range(num_of_tags):
+				Forward[j][0] = pi[j]*emission[j][words_lookup[words_in_s[0]]]
+
+			for i in range(1, num_words_in_s):
+				for j in range(num_of_tags):
+					sum_incoming_transitions = 0
+					for k in range(num_of_tags):
+						#print transition[k][j], transition[j][k]
+						sum_incoming_transitions = sum_incoming_transitions + Forward[k][i-1]*transition[k][j]*emission[j][words_lookup[words_in_s[i]]]
+
+					Forward[j][i] = sum_incoming_transitions
+
+			# Final Steps (last column of trellis)
+			#sum_last_column = 0
+			#for k in range(3):
+			#	sum_last_column = sum_last_column + Forward[k][2]
+			#print "Chosen Val ", sum_last_column
+
+
+			# Initialization (first column of trellis)
+			for j in range(num_of_tags):
+				Backward[j][num_words_in_s-1] = mpf(1)
+
+			# Intermediate Steps - All subsequent columns
+			# sum all incoming transition probabilies
+			for i in range(num_words_in_s - 2, -1, -1):
+				#print i
+				for j in range(num_of_tags):
+					sum_over_k = 0
+					for k in range(num_of_tags):
+						#print transition[j][k], emission[k][words_lookup[words_in_s[i+1]]], Backward[k][i+1]
+						sum_over_k = sum_over_k + transition[j][k]*emission[k][words_lookup[words_in_s[i+1]]]*Backward[k][i+1]
+					Backward[j][i] = sum_over_k
+
+			#print Forward
+			print Backward
 
 			
 			# prob_of_word = 0
@@ -207,41 +253,41 @@ def main():
 
 			# Compute Gamma_3D and Gamma_2D
 			# LAST INDEX is NUM WORDS IN S 
-			gamma_3D = [[[0 for s in range(num_words_in_s)] for s in range(num_of_tags)] for s in range(num_of_tags)]
+			gamma_3D = [[[mpf(1) for s in range(num_words_in_s)] for s in range(num_of_tags)] for s in range(num_of_tags)]
 			# LAST INDEX IS T
-			gamma_2D = [[0 for s in range(num_words_in_s)] for s in range(num_of_tags)]
+			gamma_2D = [[mpf(1) for s in range(num_words_in_s)] for s in range(num_of_tags)]
 
-			for t in range(1, num_words_in_s-1):
-				denom = 0
+			for t in range(1, num_words_in_s-2):
+				denom = mpf(0)
 				for i in range(num_of_tags):
 					for j in range(num_of_tags):
-						denom = denom + Forward[i][t]*transition[i][j]*emission[j][words_lookup[words_in_s[t+1]]]*Backward[j][t+1]
+						denom = mpf(mpf(denom) + mpf(Forward[i][t])*mpf(transition[i][j])*mpf(emission[j][words_lookup[words_in_s[t+1]]])*mpf(Backward[j][t+1]))
 
 				for i in range(num_of_tags):
-					gamma_2D[i][t] = 0
+					gamma_2D[i][t] = mpf(0)
 					for j in range(num_of_tags):
 						if(denom == 0):
-							gamma_3D[i][j][t] = 0
+							gamma_3D[i][j][t] = mpf(0)
 						else: 
-							gamma_3D[i][j][t] = (Forward[i][t]*transition[i][j]*emission[j][words_lookup[words_in_s[t+1]]]*Backward[j][t+1])/denom
-						gamma_2D[i][t] = gamma_2D[i][t] + gamma_3D[i][j][t]
+							gamma_3D[i][j][t] = mpf((Forward[i][t]*transition[i][j]*emission[j][words_lookup[words_in_s[t+1]]]*Backward[j][t+1])/mpf(denom))
+						gamma_2D[i][t] = mpf(gamma_2D[i][t] + gamma_3D[i][j][t])
 
 			# Reestimate A, B, and pi
 
 			# re-estimate pi
 			for i in range(num_of_tags):
-				pi[i] = gamma_2D[i][0]
+				pi[i] = mpf(gamma_2D[i][0])
 
 			# re-estimate Transition - A
 			for i in range(num_of_tags):
 				for j in range(num_of_tags):
-					numer = 0
-					denom = 0
+					numer = mpf(0)
+					denom = mpf(0)
 					for t in range(num_words_in_s):
-						numer = numer + gamma_3D[i][j][t]
-						denom = denom + gamma_2D[i][t]
+						numer = mpf(numer + gamma_3D[i][j][t])
+						denom = mpf(denom + gamma_2D[i][t])
 					if(denom != 0):
-						transition[i][j] = numer/denom
+						transition[i][j] = mpf(numer/denom)
 					#if(denom == 0):
 					#	transition[i][j] = 0
 					#else:
@@ -254,10 +300,10 @@ def main():
 					denom = 0
 					for t in range(num_words_in_s-1):
 						if( words_lookup[words_in_s[t]] == j ):
-							numer = numer + gamma_2D[i][t]
-						denom = denom + gamma_2D[i][t]
+							numer = mpf(numer + gamma_2D[i][t])
+						denom = mpf(denom + gamma_2D[i][t])
 					if(denom != 0):
-						emission[i][j] = numer/denom
+						emission[i][j] = mpf(numer/denom)
 					#if(denom == 0):
 					#	emission[i][j] = 0
 					#else:
@@ -278,7 +324,7 @@ def main():
 		data = f.readlines()
 	len_of_eval_data = len(data) 
 
-	for x in range(10):
+	for x in range(1):
 		first_sentence = data[x].split(' ')
 
 		words = []
@@ -295,12 +341,12 @@ def main():
 
 
 
-		Viterbi = [[0 for s in range(len(words))] for s in range(num_of_tags)] 
-		backpointer = [[0 for s in range(len(words))] for s in range(num_of_tags)]
+		Viterbi = [[mpf(1) for s in range(len(words))] for s in range(num_of_tags)] 
+		backpointer = [[mpf(1) for s in range(len(words))] for s in range(num_of_tags)]
 
 		for j in range(num_of_tags):
-			Viterbi[j][0] = pi[j]*emission[j][words_lookup[words[0]]]
-			backpointer[j][0] = -1
+			Viterbi[j][0] = mpf(pi[j]*emission[j][words_lookup[words[0]]])
+			backpointer[j][0] = mpf(-1)
 
 		# Intermediate Steps - All subsequent columns
 		for i in range(1, len(words)):
@@ -311,7 +357,7 @@ def main():
 				#print k_vals
 				k_star = max(k_vals)
 				k_index = k_vals.index(k_star)
-				Viterbi[j][i] = Viterbi[k_index][i-1]*transition[k_index][j]*emission[j][words_lookup[words[i]]]
+				Viterbi[j][i] = mpf(Viterbi[k_index][i-1]*transition[k_index][j]*emission[j][words_lookup[words[i]]])
 				if Viterbi[j][i] == 0:
 					backpointer[j][i] = -1
 				else:
@@ -331,10 +377,14 @@ def main():
 		for x in range(len(words)-2, -1, -1):
 			array[x] = backpointer[array[x+1]][x+1]
 
-		print tags
-		print array
 
+		# print tags
+		# print array
+		# print Viterbi
+		# print backpointer
+		# print transition
 
+		# print pi
 
 	#words_in_test = data[1].split(' ')
 
